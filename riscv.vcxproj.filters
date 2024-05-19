@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="bus.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="compressed.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="csr.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="main.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="mmu.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="platform_linux.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="platform_windows.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="plic.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="riscv.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="sbi.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="timer.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="trap.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="config.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="decode.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="platform.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="riscv.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+    <ClInclude Include="sbi.h">
+      <Filter>Header files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source files">
+      <UniqueIdentifier>{605dd1dc-aae2-418a-8e3c-286cf19772d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header files">
+      <UniqueIdentifier>{16db489f-f220-4f67-bc82-9fc6ad608980}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
