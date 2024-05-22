@@ -8,12 +8,16 @@
 #include <unistd.h>
 #include "riscv.h"
 
+// Функции в этом файле относятся к хост-платформе Linux
+
+// Отправить поток в сон на 1 мс
 int sleep1ms(void)
 {
 	usleep(1000);
 	return 1;
 }
 
+// Захват клавиатуры, чтобы символы доходили правильно
 void capture_keyb(int capture)
 {
 	struct termios term;
@@ -26,6 +30,7 @@ void capture_keyb(int capture)
 
 void console_init(void)
 {
+	// Нужен немедленный небуферизированный вывод
 	setvbuf(stdout, NULL, _IONBF, 0);
 
 	capture_keyb(1);
@@ -37,6 +42,7 @@ void console_restore(void)
 	tcflush(0, TCIFLUSH);
 }
 
+// Проверка нажатия клавиш
 int console_kbhit(void)
 {
 	int br;
@@ -44,6 +50,7 @@ int console_kbhit(void)
 	return br > 0;
 }
 
+// Чтение кода нажатой клавиши
 int console_getchar(void)
 {
 	char ch;
@@ -51,6 +58,7 @@ int console_getchar(void)
 	return ch;
 }
 
+// Вывод в TTY
 void console_putchar(int ch)
 {
 	putchar(ch);

@@ -1,6 +1,8 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
+// Платформенные функции для облегчения портирования
+
 int  sleep1ms();
 void console_init(void);
 void console_restore(void);

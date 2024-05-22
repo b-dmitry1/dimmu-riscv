@@ -4,7 +4,7 @@
     <ClCompile Include="bus.c">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="compressed.c">
+    <ClCompile Include="instr_compressed.c">
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="csr.c">
@@ -35,6 +35,15 @@
       <Filter>Source files</Filter>
     </ClCompile>
     <ClCompile Include="trap.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="instr_atomic.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="instr_priv.c">
+      <Filter>Source files</Filter>
+    </ClCompile>
+    <ClCompile Include="instr_muldiv.c">
       <Filter>Source files</Filter>
     </ClCompile>
   </ItemGroup>

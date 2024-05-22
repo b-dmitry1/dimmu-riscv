@@ -1,5 +1,6 @@
 #include "riscv.h"
 
+// Управляющие регистры процессора
 #define CSR_SSTATUS			0x100
 #define CSR_SIE				0x104
 #define CSR_STVEC			0x105
@@ -10,29 +11,17 @@
 #define CSR_SIP				0x144
 #define CSR_SATP			0x180
 
-#define CSR_MSTATUS			0x300
-#define CSR_MIE				0x304
-#define CSR_MTVEC			0x305
-#define CSR_MSCRATCH		0x340
-#define CSR_MEPC			0x341
-#define CSR_MCAUSE			0x342
-#define CSR_MTVAL			0x343
-#define CSR_MIP				0x344
-
 #define CSR_TIMECMP			0x800
 #define CSR_TIMECMPH		0x801
 #define CSR_TIME			0xC01
 #define CSR_TIMEH			0xC81
 
-#include <stdio.h>
-
 // Чтение управляющих регистров
 ui csr_read(riscv_t* cpu, uint32_t number)
 {
-	// printf("Read CSR: %x\n", number);
 	switch (number)
 	{
-	case CSR_SSTATUS: return cpu->sstatus;
+		case CSR_SSTATUS: return cpu->sstatus;
 		case CSR_SIE: return cpu->sie;
 		case CSR_STVEC: return cpu->stvec;
 		case CSR_SSCRATCH: return cpu->sscratch;
@@ -58,8 +47,6 @@ ui csr_read(riscv_t* cpu, uint32_t number)
 // Запись в управляющие регистры
 void csr_write(riscv_t* cpu, uint32_t number, ui value)
 {
-	// printf("Write CSR: %x, %llx\n", number, value);
-
 	switch (number)
 	{
 		case CSR_SSTATUS: cpu->sstatus = value; break;

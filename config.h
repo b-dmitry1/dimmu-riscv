@@ -29,3 +29,6 @@
 #include <stdint.h>
 
 #define RAM_SIZE		(RAM_SIZE_MB * 1048576)
+
+// Быстродействие процессора - примерное количество инструкций за 1 мкс
+#define INSTR_IN_1US	100

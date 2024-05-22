@@ -140,13 +140,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="instr_atomic.c" />
     <ClCompile Include="bus.c" />
-    <ClCompile Include="compressed.c" />
+    <ClCompile Include="instr_compressed.c" />
     <ClCompile Include="csr.c" />
     <ClCompile Include="mmu.c" />
+    <ClCompile Include="instr_muldiv.c" />
     <ClCompile Include="platform_linux.c" />
     <ClCompile Include="platform_windows.c" />
     <ClCompile Include="plic.c" />
+    <ClCompile Include="instr_priv.c" />
     <ClCompile Include="riscv.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="sbi.c" />

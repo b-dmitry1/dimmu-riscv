@@ -1,5 +1,7 @@
 #include "riscv.h"
 
+// Обновление флага прерывания таймера
+// Вызывается после каждой записи в регистры time или timecmp
 static void update_timer_irq(riscv_t* cpu)
 {
 	cpu->sip &= ~MIE_MTIE;
@@ -25,13 +27,13 @@ void set_mtime64(riscv_t* cpu, uint64_t value)
 	update_timer_irq(cpu);
 }
 
-#include <stdio.h>
 void set_mtimecmp64(riscv_t* cpu, uint64_t value)
 {
 	cpu->mtimecmp = value;
 	update_timer_irq(cpu);
 }
 
+// Перевод таймера вперёд на указанное кол-во микросекунд
 void riscv_timer_tick(riscv_t* cpu, int useconds)
 {
 	set_mtime64(cpu, cpu->mtime + useconds);

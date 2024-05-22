@@ -48,7 +48,7 @@ int fetch(riscv_t* cpu, uint32_t* instr)
 }
 
 // Выполнить 1 инструкцию
-void step(riscv_t* cpu)
+void do_step(riscv_t* cpu)
 {
 	uint32_t instr;
 	int rd, rs1, rs2, shamt;
@@ -56,8 +56,6 @@ void step(riscv_t* cpu)
 	si imm;
 	ui addr;
 	si value;
-	uint32_t csr;
-	ui zimm;
 	int32_t a32, b32, res32;
 	uint32_t u32;
 	uint64_t u64;
@@ -70,7 +68,7 @@ void step(riscv_t* cpu)
 	// Если это 16-битная инструкция, то выполнить в step_compressed
 	if ((instr & 3) != 3)
 	{
-		step_compressed(cpu, (uint16_t)instr);
+		do_step_compressed(cpu, (uint16_t)instr);
 		return;
 	}
 
@@ -226,208 +224,14 @@ void step(riscv_t* cpu)
 			}
 			break;
 		case 0x2F:
-			addr = cpu->r[rs1];
-			if (func3 == 2)
-			{
-				switch (bits(instr, 31, 27))
-				{
-					case 0x00: // AMOADD.W
-						if (!read32(cpu, addr, &value))
-							return;
-						a32 = (int32_t)value;
-						b32 = (int32_t)cpu->r[rs2];
-						res32 = a32 + b32;
-						if (write32(cpu, addr, res32))
-							cpu->r[rd] = a32;
-						return;
-					case 0x01: // AMOSWAP.W
-						if (!read32(cpu, addr, &value))
-							return;
-						a32 = (int32_t)value;
-						b32 = (int32_t)cpu->r[rs2];
-						res32 = b32;
-						if (write32(cpu, addr, res32))
-							cpu->r[rd] = a32;
-						return;
-					case 0x02: // LR.W
-						if (addr & 3u)
-						{
-							trap(cpu, EX_STORE_MISALIGNED, addr);
-							return;
-						}
-						if (!read32(cpu, addr, &value))
-							return;
-						cpu->r[rd] = (int32_t)value;
-						cpu->res_addr = addr;
-						return;
-					case 0x03: // SC.W
-						if (addr & 3u)
-						{
-							trap(cpu, EX_STORE_MISALIGNED, addr);
-							return;
-						}
-
-						if (addr != cpu->res_addr)
-						{
-							cpu->r[rd] = 1;
-							return;
-						}
-
-						if (write32(cpu, addr, (int32_t)cpu->r[rs2]))
-							cpu->r[rd] = 0;
-						else
-							cpu->r[rd] = 1;
-
-						cpu->res_addr = ~0u;
-						return;
-					case 0x04: // AMOXOR.W
-						if (!read32(cpu, addr, &value))
-							return;
-						a32 = (int32_t)value;
-						b32 = (int32_t)cpu->r[rs2];
-						res32 = a32 ^ b32;
-						if (write32(cpu, addr, res32))
-							cpu->r[rd] = a32;
-						return;
-					case 0x08: // AMOOR.W
-						if (!read32(cpu, addr, &value))
-							return;
-						a32 = (int32_t)value;
-						b32 = (int32_t)cpu->r[rs2];
-						res32 = a32 | b32;
-						if (write32(cpu, addr, res32))
-							cpu->r[rd] = a32;
-						return;
-					case 0x0C: // AMOAND.W
-						if (!read32(cpu, addr, &value))
-							return;
-						a32 = (int32_t)value;
-						b32 = (int32_t)cpu->r[rs2];
-						res32 = a32 & b32;
-						if (write32(cpu, addr, res32))
-							cpu->r[rd] = a32;
-						return;
-				}
-			}
-			else if (func3 == 3)
-			{
-				switch (bits(instr, 31, 27))
-				{
-					case 0x00: // AMOADD.D
-						if (!read64(cpu, addr, &value))
-							return;
-						if (!write64(cpu, addr, value + cpu->r[rs2]))
-							return;
-						cpu->r[rd] = value;
-						return;
-					case 0x01: // AMOSWAP.D
-						if (!read64(cpu, addr, &value))
-							return;
-						if (!write64(cpu, addr, cpu->r[rs2]))
-							return;
-						cpu->r[rd] = value;
-						return;
-					case 0x02: // LR.D
-						if (addr & 7u)
-						{
-							trap(cpu, EX_STORE_MISALIGNED, addr);
-							return;
-						}
-						if (!read64(cpu, addr, &value))
-							return;
-						cpu->r[rd] = value;
-						cpu->res_addr = addr;
-						return;
-					case 0x03: // SC.D
-						if (addr & 7u)
-						{
-							trap(cpu, EX_STORE_MISALIGNED, addr);
-							return;
-						}
-
-						if (addr != cpu->res_addr)
-						{
-							cpu->r[rd] = 1;
-							return;
-						}
-
-						if (write64(cpu, addr, cpu->r[rs2]))
-							cpu->r[rd] = 0;
-						else
-							cpu->r[rd] = 1;
-
-						cpu->res_addr = ~0u;
-						return;
-					case 0x04: // AMOXOR.D
-						if (!read64(cpu, addr, &value))
-							return;
-						if (!write64(cpu, addr, value ^ cpu->r[rs2]))
-							return;
-						cpu->r[rd] = value;
-						return;
-					case 0x08: // AMOOR.D
-						if (!read64(cpu, addr, &value))
-							return;
-						if (!write64(cpu, addr, value | cpu->r[rs2]))
-							return;
-						cpu->r[rd] = value;
-						return;
-					case 0x0C: // AMOAND.D
-						if (!read64(cpu, addr, &value))
-							return;
-						if (!write64(cpu, addr, value & cpu->r[rs2]))
-							return;
-						cpu->r[rd] = value;
-						return;
-				}
-			}
-			break;
+			// Атомарные инструкции
+			do_atomic(cpu, instr, rs1, rs2, rd, func3, func7);
+			return;
 		case 0x33:
 			if (func7 & 0x01)
 			{
-				switch (func3)
-				{
-					case 0: // MUL
-						cpu->r[rd] = cpu->r[rs1] * cpu->r[rs2];
-						return;
-					case 1: // MULH
-						cpu->r[rd] = (cpu->r[rs1] * ((int64_t)cpu->r[rs2])) >> XLEN;
-						return;
-					case 2: // MULHSU
-						cpu->r[rd] = (((int64_t)cpu->r[rs1]) * (uint64_t)cpu->r[rs2]) >> XLEN;
-						return;
-					case 3: // MULHU
-#if XLEN == 64
-						cpu->r[rd] = 0; // Не все компиляторы умеют умножать uint64_t на uint64_t
-#else
-						cpu->r[rd] = (((uint64_t)(ui)cpu->r[rs1]) * (uint64_t)(ui)cpu->r[rs2]) >> XLEN;
-#endif
-						return;
-					case 4: // DIV
-						if (cpu->r[rs2] == 0)
-							cpu->r[rd] = -1;
-						else
-							cpu->r[rd] = cpu->r[rs1] / cpu->r[rs2];
-						return;
-					case 5: // DIVU
-						if (cpu->r[rs2] == 0)
-							cpu->r[rd] = -1;
-						else
-							cpu->r[rd] = ((ui)cpu->r[rs1]) / ((ui)cpu->r[rs2]);
-						return;
-					case 6: // REM
-						if (cpu->r[rs2] == 0)
-							cpu->r[rd] = cpu->r[rs1];
-						else
-							cpu->r[rd] = cpu->r[rs1] % cpu->r[rs2];
-						return;
-					case 7: // REMU
-						if (cpu->r[rs2] == 0)
-							cpu->r[rd] = cpu->r[rs1];
-						else
-							cpu->r[rd] = ((ui)cpu->r[rs1]) % ((ui)cpu->r[rs2]);
-						return;
-				}
+				do_muldiv(cpu, instr, rs1, rs2, rd, func3, func7);
+				return;
 			}
 			else
 			{
@@ -482,37 +286,8 @@ void step(riscv_t* cpu)
 			b32 = (int32_t)cpu->r[rs2];
 			if (func7 & 0x01)
 			{
-				switch (func3)
-				{
-					case 0: // MULW
-						res32 = a32 * b32;
-						cpu->r[rd] = res32;
-						return;
-					case 4: // DIVW
-						if (b32 == 0)
-							res32 = -1;
-						else if (a32 == 0x80000000 && b32 == -1)
-							res32 = -1;
-						else
-							res32 = a32 / b32;
-						cpu->r[rd] = res32;
-						return;
-					case 5: // DIVUW
-						if (b32 == 0)
-							cpu->r[rd] = -1;
-						else if (a32 == 0x80000000 && b32 == -1)
-							cpu->r[rd] = 0x80000000;
-						else
-							cpu->r[rd] = ((uint32_t)a32) / ((uint32_t)b32);
-						return;
-					case 6: // REMW
-						res32 = a32 % b32;
-						cpu->r[rd] = res32;
-						return;
-					case 7: // REMUW
-						cpu->r[rd] = ((uint32_t)a32) % ((uint32_t)b32);
-						return;
-				}
+				do_muldiv32(cpu, instr, rs1, rs2, rd, func3, func7);
+				return;
 			}
 			else
 			{
@@ -597,83 +372,14 @@ void step(riscv_t* cpu)
 			cpu->pc = cpu->instr_pc + J_imm(instr);
 			return;
 		case 0x73:
-			// Привилегированные инструкции
-			csr = bits(instr, 31, 20);
-			zimm = bits(instr, 19, 15);
-			switch (func3)
-			{
-				case 0:
-					switch (csr)
-					{
-						case 0x000:
-							// ECALL - системный вызов.
-							// Сначала проверить известные команды,
-							// и если ни одна не подошла, то сгенерировать исключение
-							// в зависимости от режима (пользователь или супервизор)
-							if (!sbi_ecall(cpu))
-								trap(cpu, cpu->s_mode ? EX_ECALL_S : EX_ECALL_U, 0);
-							return;
-						case 0x001:
-							// EBREAK - вызов отладчика
-							trap(cpu, EX_BREAKPOINT, 0);
-							return;
-						case 0x102:
-							// SRET - возврат из исключения/прерывания
-							sret(cpu);
-							return;
-						case 0x105:
-							// WFI - спящий режим до появления прерывания
-							cpu->wfi = 1;
-							// cpu->sstatus |= SSTATUS_SIE;
-							return;
-						case 0x120:
-							// SFENCE.VMA - очистка кэша трансляции адресов
-							return;
-					}
-					break;
-				case 1:
-					// CSRRW
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, cpu->r[rs1]);
-					cpu->r[rd] = value;
-					return;
-				case 2:
-					// CSRRS
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, value | cpu->r[rs1]);
-					cpu->r[rd] = value;
-					return;
-				case 3:
-					// CSRRC
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, value & ~cpu->r[rs1]);
-					cpu->r[rd] = value;
-					return;
-				case 5:
-					// CSRRWI
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, zimm);
-					cpu->r[rd] = value;
-					return;
-				case 6:
-					// CSRRSI
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, value | zimm);
-					cpu->r[rd] = value;
-					return;
-				case 7:
-					// CSRRCI
-					value = rd == 0 ? 0 : csr_read(cpu, csr);
-					csr_write(cpu, csr, value & ~zimm);
-					cpu->r[rd] = value;
-					return;
-			}
-			break;
+			do_priv(cpu, instr, rs1, rs2, rd, func3, func7);
+			return;
 	}
 	trap(cpu, EX_INSTR_ILLEGAL, cpu->instr_pc);
 }
 
-void step100(riscv_t* cpu)
+// Выполнять код 1 микросекунду
+void step1us(riscv_t* cpu)
 {
 	int i, t = 0;
 
@@ -683,8 +389,8 @@ void step100(riscv_t* cpu)
 
 	plic_update(cpu);
 
-	for (i = 0; i < 100 && !cpu->wfi; i++)
-		step(cpu);
+	for (i = 0; i < INSTR_IN_1US && !cpu->wfi; i++)
+		do_step(cpu);
 }
 
 // Сброс процессора

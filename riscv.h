@@ -6,17 +6,28 @@
 
 // Код режима работы MMU и константы, зависящие от разрядности
 #if XLEN == 64
-typedef uint64_t ui; // Регистры 64-битные
+
+// Регистры 64-битные
+typedef uint64_t ui;
 typedef int64_t si;
+// Биты включения MMU
 #define SATP_MODE_ENABLE			0x8000000000000000llu
 #define SATP_MODE_MASK				0xF000000000000000llu
+// Количество уровней в каталогах страниц
 #define MMU_LEVELS					3
+// Количество битов, определяющих номер страницы в каталоге
 #define MMU_LEVEL_BITS				9
+// Битовая маска номера страницы в каталоге
 #define MMU_VPN_MASK				0x1FFu
+// Битовая маска для определения размера огромной страницы (если только 1 уровень)
 #define MMU_PAGE_MASK				0x3FFFFFFFllu
+// Флаг, отличающий прерывание от исключительной ситуации
 #define CAUSE_IRQ					0x8000000000000000llu
+
 #else
-typedef uint32_t ui; // Регистры 32-битные
+
+// Регистры 32-битные
+typedef uint32_t ui;
 typedef int32_t si;
 #define SATP_MODE_ENABLE			0x80000000u
 #define SATP_MODE_MASK				0x80000000u
@@ -25,6 +36,7 @@ typedef int32_t si;
 #define MMU_VPN_MASK				0x3FFu
 #define MMU_PAGE_MASK				0x3FFFFFu
 #define CAUSE_IRQ					0x80000000u
+
 #endif
 
 // Коды исключительных ситуаций
@@ -43,7 +55,7 @@ typedef int32_t si;
 #define EX_LOAD_PAGE_FAULT			13
 #define EX_STORE_PAGE_FAULT			15
 
-// Прерывания
+// Коды прерываний
 #define INT_U_SOFT					(CAUSE_IRQ | 0x0)
 #define INT_S_SOFT					(CAUSE_IRQ | 0x1)
 #define INT_M_SOFT					(CAUSE_IRQ | 0x3)
@@ -55,13 +67,21 @@ typedef int32_t si;
 #define INT_M_EXT					(CAUSE_IRQ | 0xb)
 
 // Битовые поля в каталогах страниц виртуальной памяти
+// V (valid) - запись существует
 #define MMU_V						0x0001
+// R (read) - разрешение чтения из страницы памяти
 #define MMU_R						0x0002
+// W (write) - разрешение записи в страницу памяти
 #define MMU_W						0x0004
+// X (execute) - разрешение выполнения кода из страницы памяти
 #define MMU_X						0x0008
+// USER - разрешение доступа из пользовательского режима
 #define MMU_USER					0x0010
+// GLOBAL - флаг разделяемой страницы, она существует во всех адресных пространствах
 #define MMU_GLOBAL					0x0020
+// ACCESSED - индикатор, показывающий, что был доступ к содержимому страницы
 #define MMU_ACCESSED				0x0040
+// DIRTY - индикатор, показывающий, что было изменение содержимого страницы
 #define MMU_DIRTY					0x0080
 
 // Флаг разрешения прерывания таймера
@@ -141,8 +161,16 @@ int write64(riscv_t* cpu, ui addr, int64_t value);
 ui csr_read(riscv_t* cpu, uint32_t number);
 void csr_write(riscv_t* cpu, uint32_t number, ui value);
 
+// Расширение "A" - Атомарные инструкции
+void do_atomic(riscv_t* cpu, uint32_t instr, int rs1, int rs2, int rd, int func3, int func7);
+// Расширение "M" - Аппаратное умножение и деление
+void do_muldiv(riscv_t* cpu, uint32_t instr, int rs1, int rs2, int rd, int func3, int func7);
+void do_muldiv32(riscv_t* cpu, uint32_t instr, int rs1, int rs2, int rd, int func3, int func7);
+// Привелегированные инструкции
+void do_priv(riscv_t* cpu, uint32_t instr, int rs1, int rs2, int rd, int func3, int func7);
+
 // Функции управления процессором
-void step(riscv_t* cpu);
-void step_compressed(riscv_t* cpu, uint16_t instr);
-void step100(riscv_t* cpu);
+void do_step(riscv_t* cpu);
+void do_step_compressed(riscv_t* cpu, uint16_t instr);
+void step1us(riscv_t* cpu);
 void reset(riscv_t* cpu);
